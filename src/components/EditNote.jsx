@@ -1,37 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useSelector, useDispatch } from "react-redux";
-import { editNote, fetchNotes } from "../store/api/NoteSlice";
+ import { useEditNoteMutation, useFetchNotesQuery } from "../store/api/NoteSlice";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 const EditNote = () => {
+  const [editNote]=useEditNoteMutation()
+  const {data:notes=[]}=useFetchNotesQuery()
 
-  const dispatch = useDispatch();
-  const params = useParams();
   const navigate = useNavigate();
+  const params=useParams()
 
   const [initialValues, setInitialValues] = useState({
     title: '',
     content: '',
   });
 
-  const allNotes = useSelector((state) => state.notes.notes);
 
-  useEffect(() => {
-    dispatch(fetchNotes());
-  }, [dispatch]);
   
-  useEffect(() => {
-    const note = allNotes.find((note) => note.id === Number(params.id));
+  
+  
+    useEffect(() => {
+     const note = notes.find((note) => note.id === Number(params.id));
     if (note) {
-      setInitialValues({
+      setInitialValues({ 
         title: note.title,
         content: note.content,
       });
     }
-  }, [allNotes, params.id]);
+  }, [notes, params.id]);
 
 
 
@@ -42,17 +40,18 @@ const EditNote = () => {
 
   const handleSubmit = (values) => {
  
-    dispatch(editNote({
+    editNote({
       noteId: Number(params.id),
       updateNote: values,
-    })).then(() => {
-      navigate('/');
-    });
+    }).unwrap().then(()=>{
+      navigate("/")
+    })
   };
 
   return (
     <div className="bg-white p-10 rounded-lg shadow md:w-3/4 mx-auto lg:w-1/2">
       <Formik
+      
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
